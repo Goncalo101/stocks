@@ -29,8 +29,35 @@ def getStockListing(index):
         variationFrom1Jan = tree.xpath(
             '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
 
+        # Each stock is going to be inside a vector inside a list
         for i in range(40):
             properStockList.append((stocks[i], latestPrice[i], variation[i], openingPrice[i],
                                     highestPrice[i], lowestPrice[i]))
 
         return properStockList
+
+    elif index == "DAX30":
+        page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
+        tree = html.fromstring(page.content)
+
+        stocks = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-libelle"]/a/text()')
+        latestPrice = tree.xpath(
+            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-last"]/span/text()')
+        variation = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var"]/span/text()')
+        openingPrice = tree.xpath(
+            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-open"]/span/text()')
+        highestPrice = tree.xpath(
+            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-high"]/span/text()')
+        lowestPrice = tree.xpath(
+            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-low"]/span/text()')
+        variationFrom1Jan = tree.xpath(
+            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
+
+        for i in range(30):
+            properStockList.append((stocks[i], latestPrice[i], variation[i], openingPrice[i],
+                                    highestPrice[i], lowestPrice[i]))
+
+        return properStockList
+
+getStockListing("CAC40")
+print(properStockList)
