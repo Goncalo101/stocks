@@ -5,59 +5,90 @@
 # purposes.
 # This is a web scraper, no api is being used, so it is quite limited.
 
+from datetime import datetime
 from lxml import html
+from third_party import highlight
 import requests
 
-properStockList = []
+proper_stock_list = []
 
-def getStockListing(index):
+
+def get_stock_listing(index):
     if index == "CAC40":
         page = requests.get("http://www.boursorama.com/bourse/actions/cours_az.phtml?MARCHE=1rPCAC")
         tree = html.fromstring(page.content)
 
         stocks = tree.xpath('//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-libelle"]/a/text()')
-        latestPrice = tree.xpath(
+        latest_price = tree.xpath(
             '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-last"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-last"]/span/text()')
         variation = tree.xpath(
             '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var"]/span/text()')
-        openingPrice = tree.xpath(
+        opening_price = tree.xpath(
             '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-open"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-open"]/span/text()')
-        highestPrice = tree.xpath(
+        highest_price = tree.xpath(
             '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-high"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-high"]/span/text()')
-        lowestPrice = tree.xpath(
+        lowest_price = tree.xpath(
             '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-low"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-low"]/span/text()')
-        variationFrom1Jan = tree.xpath(
+        variation_from1_jan = tree.xpath(
             '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
 
         # Each stock is going to be inside a vector inside a list
         for i in range(40):
-            properStockList.append((stocks[i], latestPrice[i], variation[i], openingPrice[i],
-                                    highestPrice[i], lowestPrice[i]))
+            proper_stock_list.append((stocks[i], latest_price[i], variation[i], opening_price[i],
+                                      highest_price[i], lowest_price[i]))
 
-        return properStockList
+        return proper_stock_list
 
     elif index == "DAX30":
         page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
         tree = html.fromstring(page.content)
 
         stocks = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-libelle"]/a/text()')
-        latestPrice = tree.xpath(
+        latest_price = tree.xpath(
             '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-last"]/span/text()')
         variation = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var"]/span/text()')
-        openingPrice = tree.xpath(
+        opening_price = tree.xpath(
             '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-open"]/span/text()')
-        highestPrice = tree.xpath(
+        highest_price = tree.xpath(
             '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-high"]/span/text()')
-        lowestPrice = tree.xpath(
+        lowest_price = tree.xpath(
             '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-low"]/span/text()')
-        variationFrom1Jan = tree.xpath(
+        variation_from1_jan = tree.xpath(
             '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
 
         for i in range(30):
-            properStockList.append((stocks[i], latestPrice[i], variation[i], openingPrice[i],
-                                    highestPrice[i], lowestPrice[i]))
+            proper_stock_list.append((stocks[i], latest_price[i], variation[i], opening_price[i],
+                                      highest_price[i], lowest_price[i]))
 
-        return properStockList
+        return proper_stock_list
 
-getStockListing("CAC40")
-print(properStockList)
+
+def display_stock_info(stock, index):
+    for i in range(len(proper_stock_list)):
+        if proper_stock_list[i][0] == stock.upper():
+            print("Information for stock: %s" % proper_stock_list[i][0])
+
+            print("Latest Price: %s" % proper_stock_list[i][1])
+
+            print("Variation: %s" % highlight.highlight(proper_stock_list[i][2]))
+
+            print("Opening Price: %s" % proper_stock_list[i][3])
+
+            print("Highest Price in Session: %s" % proper_stock_list[i][4])
+
+            print("Lowest Price in Session: %s" % proper_stock_list[i][5])
+
+            print("\n")
+
+            print("Data retrieved on: %s" % datetime.now())
+
+            print("Data might be delayed by up to 15 minutes.")
+
+            return
+
+    print("Stock: %s is not in %s" % (stock, index))
+
+
+get_stock_listing("DAX30")
+print(proper_stock_list)
+display_stock_info("VONOVIA", "DAX30")
