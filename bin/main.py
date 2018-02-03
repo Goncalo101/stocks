@@ -127,8 +127,3 @@ while start:
         start = False
 
 exit(0)
-
-get_stock_listing("CAC40")
-print(proper_stock_list)
-display_stock_info("LVMH MOET VUITTON", "CAC40")
-
