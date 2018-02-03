@@ -69,21 +69,15 @@ def display_stock_info(stock, index):
     for i in range(len(proper_stock_list)):
         if proper_stock_list[i][0] == stock.upper():
             print("Information for stock: %s" % proper_stock_list[i][0])
-
             print("Latest Price: %s" % proper_stock_list[i][1])
-
             print("Variation: %s" % highlight.highlight(proper_stock_list[i][2]))
-
             print("Opening Price: %s" % proper_stock_list[i][3])
-
             print("Highest Price in Session: %s" % proper_stock_list[i][4])
-
             print("Lowest Price in Session: %s" % proper_stock_list[i][5])
 
             print("\n")
 
             print("Data retrieved on: %s" % datetime.now())
-
             print("Data might be delayed by up to 15 minutes.")
 
             return
@@ -101,29 +95,32 @@ while start:
     option = input("> ")
 
     if option == "1":
-
         index = input("Insert an index > ").upper()
         get_stock_listing(index)
 
         for i in range(len(proper_stock_list)):
-
             print("Information for stock: %s" % proper_stock_list[i][0])
-
             print("Latest Price: %s" % proper_stock_list[i][1])
-
             print("Variation: %s" % highlight.highlight(proper_stock_list[i][2]))
-
             print("Opening Price: %s" % proper_stock_list[i][3])
-
             print("Highest Price in Session: %s" % proper_stock_list[i][4])
-
             print("Lowest Price in Session: %s" % proper_stock_list[i][5])
 
             print("\n")
 
     elif option == "2":
 
+        index = input("Insert an index > ").upper()
         get_stock_listing(index)
+
+    elif option == "3":
+        index = input("Insert an index > ").upper()
+        stock = input("Insert a stock > ").upper()
+
+        get_stock_listing(index)
+        display_stock_info(stock, index)
+
+        print("\n")
 
     elif option == "4":
 
