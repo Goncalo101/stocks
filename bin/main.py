@@ -9,7 +9,7 @@ from lxml import html
 from third_party import highlight
 import requests
 
-cac40_info = []
+cac40_info = {'stocks'}
 dax30_info = []
 time = datetime.now()
 start = True
@@ -37,8 +37,9 @@ def get_stock_listing():
 
         # Each stock is going to be inside a vector inside a list
         for i in range(40):
-            cac40_info.append((stocks[i], latest_price[i], variation[i], opening_price[i],
-                               highest_price[i], lowest_price[i]))
+            cac40_info.append({stocks[i]})
+            # cac40_info.append((stocks[i], latest_price[i], variation[i], opening_price[i],
+            #                    highest_price[i], lowest_price[i]))
 
         page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
         tree = html.fromstring(page.content)
@@ -64,12 +65,12 @@ def get_stock_listing():
 def lookup_stock(stock, index):
     if index == "CAC40":
         for i in range(len(cac40_info)):
-            if cac40_info[i][0] == stock:
+            if stock in cac40_info[i][0]:
                 return cac40_info[i]
 
     elif index == "DAX30":
         for i in range(len(dax30_info)):
-            if dax30_info[i] == stock:
+            if stock in dax30_info[i]:
                 return dax30_info[i]
 
 
@@ -100,6 +101,7 @@ get_stock_listing()
 
 while start:
     print("Select an option:")
+    print("0: Debug")
     print("1: Display Index Info (Might generate big lists of data).")
     print("2: Refresh Stock Lists.")  # The need to generate at least 2 arrays might be too resource intensive
     print("3: Show Info of a Given Stock.")
@@ -107,11 +109,15 @@ while start:
 
     option = input("> ")
 
+    if option == "0":
+        print(cac40_info)
+        print(cac40_info["ACCOR"]["price"])
+
     if option == "1":
         index = input("Insert an index > ").upper()
 
         if index == "CAC40":
-            for i in range(len(cac40_info)):
+            for i in range(len(cac40_info)):  # Looking for a stock this way
                 display_stock_info(cac40_info[i])
 
         elif index == "DAX30":
