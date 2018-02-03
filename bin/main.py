@@ -11,6 +11,8 @@ from third_party import highlight
 import requests
 
 proper_stock_list = []
+version = "0.01"
+start = True
 
 
 def get_stock_listing(index):
@@ -57,8 +59,8 @@ def get_stock_listing(index):
             '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
 
         for i in range(30):
-            proper_stock_list.append((stocks[i], latest_price[i], variation[i], opening_price[i],
-                                      highest_price[i], lowest_price[i]))
+            proper_stock_list.append([stocks[i], latest_price[i], variation[i], opening_price[i],
+                                      highest_price[i], lowest_price[i]])
 
         return proper_stock_list
 
@@ -89,6 +91,47 @@ def display_stock_info(stock, index):
     print("Stock: %s is not in %s" % (stock, index))
 
 
-get_stock_listing("DAX30")
+while start:
+    print("StockParser version %s" % version,  "Select an option to start:", sep="\n")
+    print("1: Display Index Info (Might generate big lists of data).")
+    print("2: Refresh Stock Lists.")
+    print("3: Show Info of a Given Stock.")
+    print("4: Exit")
+
+    option = input("> ")
+
+    if option == "1":
+
+        index = input("Insert an index > ").upper()
+        get_stock_listing(index)
+
+        for i in range(len(proper_stock_list)):
+
+            print("Information for stock: %s" % proper_stock_list[i][0])
+
+            print("Latest Price: %s" % proper_stock_list[i][1])
+
+            print("Variation: %s" % highlight.highlight(proper_stock_list[i][2]))
+
+            print("Opening Price: %s" % proper_stock_list[i][3])
+
+            print("Highest Price in Session: %s" % proper_stock_list[i][4])
+
+            print("Lowest Price in Session: %s" % proper_stock_list[i][5])
+
+            print("\n")
+
+    elif option == "2":
+
+        get_stock_listing(index)
+
+    elif option == "4":
+
+        start = False
+
+exit(0)
+
+get_stock_listing("CAC40")
 print(proper_stock_list)
-display_stock_info("VONOVIA", "DAX30")
+display_stock_info("LVMH MOET VUITTON", "CAC40")
+
