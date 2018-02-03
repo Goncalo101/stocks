@@ -1,8 +1,7 @@
 # This is the core file of the stocks project.
 # stocks is a program to retrieve the latest prices of a given stock or list of
 # stocks in a given index and present it in a pretty way in terminal.
-# Future builds should include a graphical interface and a virtual wallet for management
-# purposes.
+# Future builds should include a graphical interface and a virtual wallet for management purposes.
 # This is a web scraper, no api is being used, so it is quite limited.
 
 from datetime import datetime
@@ -10,13 +9,15 @@ from lxml import html
 from third_party import highlight
 import requests
 
-proper_stock_list = []
-version = "0.01"
+cac40_info = []
+dax30_info = []
+time = datetime.now()
 start = True
+version = "0.01"
 
-
-def get_stock_listing(index):
-    if index == "CAC40":
+# get_stock_listing should connect to boursorama, read the constituents of each index and modify the list of the
+# corresponding index with new values
+def get_stock_listing():
         page = requests.get("http://www.boursorama.com/bourse/actions/cours_az.phtml?MARCHE=1rPCAC")
         tree = html.fromstring(page.content)
 
@@ -36,12 +37,9 @@ def get_stock_listing(index):
 
         # Each stock is going to be inside a vector inside a list
         for i in range(40):
-            proper_stock_list.append((stocks[i], latest_price[i], variation[i], opening_price[i],
-                                      highest_price[i], lowest_price[i]))
+            cac40_info.append((stocks[i], latest_price[i], variation[i], opening_price[i],
+                               highest_price[i], lowest_price[i]))
 
-        return proper_stock_list
-
-    elif index == "DAX30":
         page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
         tree = html.fromstring(page.content)
 
@@ -59,36 +57,51 @@ def get_stock_listing(index):
             '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
 
         for i in range(30):
-            proper_stock_list.append([stocks[i], latest_price[i], variation[i], opening_price[i],
-                                      highest_price[i], lowest_price[i]])
-
-        return proper_stock_list
+            dax30_info.append([stocks[i], latest_price[i], variation[i], opening_price[i],
+                               highest_price[i], lowest_price[i]])
 
 
-def display_stock_info(stock, index):
-    for i in range(len(proper_stock_list)):
-        if proper_stock_list[i][0] == stock.upper():
-            print("Information for stock: %s" % proper_stock_list[i][0])
-            print("Latest Price: %s" % proper_stock_list[i][1])
-            print("Variation: %s" % highlight.highlight(proper_stock_list[i][2]))
-            print("Opening Price: %s" % proper_stock_list[i][3])
-            print("Highest Price in Session: %s" % proper_stock_list[i][4])
-            print("Lowest Price in Session: %s" % proper_stock_list[i][5])
+def lookup_stock(stock, index):
+    if index == "CAC40":
+        for i in range(len(cac40_info)):
+            if cac40_info[i][0] == stock:
+                return cac40_info[i]
 
-            print("\n")
+    elif index == "DAX30":
+        for i in range(len(dax30_info)):
+            if dax30_info[i] == stock:
+                return dax30_info[i]
 
-            print("Data retrieved on: %s" % datetime.now())
-            print("Data might be delayed by up to 15 minutes.")
 
-            return
+def display_stock_info(stock_list):
+    if stock_list is None:
+        print("Could not find stock in index.")
 
-    print("Stock: %s is not in %s" % (stock, index))
+    else:
+        print("\n")
 
+        print("Information for stock: %s" % stock_list[0])
+        print("Latest Price: %s" % stock_list[1])
+        print("Variation: %s" % highlight.highlight(stock_list[2]))
+        print("Opening Price: %s" % stock_list[3])
+        print("Highest Price in Session: %s" % stock_list[4])
+        print("Lowest Price in Session: %s" % stock_list[5])
+
+        print("\n")
+
+        print("Data retrieved on: %s" % time)
+        print("Data might be delayed by up to 15 minutes.")
+
+
+# Program main loop
+print("StockParser version %s" % version, sep="\n")
+print("Initializing...")
+get_stock_listing()
 
 while start:
-    print("StockParser version %s" % version,  "Select an option to start:", sep="\n")
+    print("Select an option:")
     print("1: Display Index Info (Might generate big lists of data).")
-    print("2: Refresh Stock Lists.")
+    print("2: Refresh Stock Lists.")  # The need to generate at least 2 arrays might be too resource intensive
     print("3: Show Info of a Given Stock.")
     print("4: Exit")
 
@@ -96,34 +109,33 @@ while start:
 
     if option == "1":
         index = input("Insert an index > ").upper()
-        get_stock_listing(index)
 
-        for i in range(len(proper_stock_list)):
-            print("Information for stock: %s" % proper_stock_list[i][0])
-            print("Latest Price: %s" % proper_stock_list[i][1])
-            print("Variation: %s" % highlight.highlight(proper_stock_list[i][2]))
-            print("Opening Price: %s" % proper_stock_list[i][3])
-            print("Highest Price in Session: %s" % proper_stock_list[i][4])
-            print("Lowest Price in Session: %s" % proper_stock_list[i][5])
+        if index == "CAC40":
+            for i in range(len(cac40_info)):
+                display_stock_info(cac40_info[i])
 
-            print("\n")
+        elif index == "DAX30":
+            for i in range(len(dax30_info)):
+                display_stock_info(dax30_info[i])
+
+        print("\n")
 
     elif option == "2":
-
-        index = input("Insert an index > ").upper()
-        get_stock_listing(index)
+        print("Refreshing...")
+        time = datetime.now()
+        get_stock_listing()
+        print("Done\n")
 
     elif option == "3":
         index = input("Insert an index > ").upper()
         stock = input("Insert a stock > ").upper()
 
-        get_stock_listing(index)
-        display_stock_info(stock, index)
+        display_stock_info(lookup_stock(stock, index))
 
         print("\n")
 
     elif option == "4":
-
+        # Exit loop
         start = False
 
 exit(0)
