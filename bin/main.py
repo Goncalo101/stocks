@@ -104,13 +104,14 @@ while start:
         index = input("Insert an index > ").upper()
 
         if index == "CAC40":
-            keys = cac40_info["stocks"].keys()
-            for i in range(len(cac40_info)):  # Looking for a stock this way
-                display_stock_info(cac40_info["stocks"][keys[i]])
+            keys = list(cac40_info["stocks"].keys())
+            for i in range(len(cac40_info["stocks"])):  # Looking for a stock this way
+                display_stock_info(cac40_info["stocks"][keys[i]], keys[i])
 
         elif index == "DAX30":
-            for i in range(len(dax30_info)):
-                display_stock_info(dax30_info[i])
+            keys = list(dax30_info["stocks"].keys())
+            for i in range(len(dax30_info["stocks"])):
+                display_stock_info(dax30_info["stocks"][keys[i]], keys[i])
 
         print("\n")
 
@@ -124,11 +125,20 @@ while start:
         index = input("Insert an index > ").upper()
         stock = input("Insert a stock > ").upper()
 
-        try:
-            display_stock_info(cac40_info["stocks"][stock], stock)
+        if index == "CAC40":
 
-        except KeyError:
-            print("The stock %s does not exist in %s" % (stock, index))
+            try:
+                display_stock_info(cac40_info["stocks"][stock], stock)
+
+            except KeyError:
+                print("The stock %s does not exist in %s" % (stock, index))
+
+        elif index == "DAX30":
+            try:
+                display_stock_info(dax30_info["stocks"][stock], stock)
+
+            except KeyError:
+                print("The stock %s does not exist in %s" % (stock, index))
 
         print("\n")
 
