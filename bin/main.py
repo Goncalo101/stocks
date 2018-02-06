@@ -119,7 +119,6 @@ while start:
         time_of_request = datetime.now()
         get_stock_listing()
         print("Done\n")
-        start = False
 
     elif option == "3":
         index = input("Insert an index > ").upper()
