@@ -9,11 +9,12 @@ from lxml import html
 from third_party import highlight
 import requests
 
-cac40_info = {'stocks'}
-dax30_info = []
-time = datetime.now()
+cac40_info = {'stocks': {}}
+dax30_info = {'stocks': {}}
+time_of_request = datetime.now()
 start = True
 version = "0.01"
+
 
 # get_stock_listing should connect to boursorama, read the constituents of each index and modify the list of the
 # corresponding index with new values
@@ -37,9 +38,9 @@ def get_stock_listing():
 
         # Each stock is going to be inside a vector inside a list
         for i in range(40):
-            cac40_info.append({stocks[i]})
-            # cac40_info.append((stocks[i], latest_price[i], variation[i], opening_price[i],
-            #                    highest_price[i], lowest_price[i]))
+            cac40_info["stocks"][stocks[i]] = {"LatestPrice": latest_price[i], "Variation": variation[i],
+                                               "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
+                                               "LowestPrice": lowest_price[i]}
 
         page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
         tree = html.fromstring(page.content)
@@ -58,40 +59,25 @@ def get_stock_listing():
             '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
 
         for i in range(30):
-            dax30_info.append([stocks[i], latest_price[i], variation[i], opening_price[i],
-                               highest_price[i], lowest_price[i]])
+            dax30_info["stocks"][stocks[i]] = {"LatestPrice": latest_price[i], "Variation": variation[i],
+                                               "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
+                                               "LowestPrice": lowest_price[i]}
 
 
-def lookup_stock(stock, index):
-    if index == "CAC40":
-        for i in range(len(cac40_info)):
-            if stock in cac40_info[i][0]:
-                return cac40_info[i]
+def display_stock_info(stock_list, stock):
+    print("\n")
 
-    elif index == "DAX30":
-        for i in range(len(dax30_info)):
-            if stock in dax30_info[i]:
-                return dax30_info[i]
+    print("Information for stock: %s" % stock)
+    print("Latest Price: %s" % stock_list["LatestPrice"])
+    print("Variation: %s" % highlight.highlight(stock_list["Variation"]))
+    print("Opening Price: %s" % stock_list["OpeningPrice"])
+    print("Highest Price in Session: %s" % stock_list["HighestPrice"])
+    print("Lowest Price in Session: %s" % stock_list["LowestPrice"])
 
+    print("\n")
 
-def display_stock_info(stock_list):
-    if stock_list is None:
-        print("Could not find stock in index.")
-
-    else:
-        print("\n")
-
-        print("Information for stock: %s" % stock_list[0])
-        print("Latest Price: %s" % stock_list[1])
-        print("Variation: %s" % highlight.highlight(stock_list[2]))
-        print("Opening Price: %s" % stock_list[3])
-        print("Highest Price in Session: %s" % stock_list[4])
-        print("Lowest Price in Session: %s" % stock_list[5])
-
-        print("\n")
-
-        print("Data retrieved on: %s" % time)
-        print("Data might be delayed by up to 15 minutes.")
+    print("Data retrieved on: %s" % time_of_request)
+    print("Data might be delayed by up to 15 minutes.")
 
 
 # Program main loop
@@ -103,22 +89,24 @@ while start:
     print("Select an option:")
     print("0: Debug")
     print("1: Display Index Info (Might generate big lists of data).")
-    print("2: Refresh Stock Lists.")  # The need to generate at least 2 arrays might be too resource intensive
+    print("2: Refresh Stock Lists.")
     print("3: Show Info of a Given Stock.")
     print("4: Exit")
 
     option = input("> ")
 
     if option == "0":
-        print(cac40_info)
-        print(cac40_info["ACCOR"]["price"])
+        display_stock_info(cac40_info["stocks"]["VIVENDI"], "VIVENDI")
+
+        start = False
 
     if option == "1":
         index = input("Insert an index > ").upper()
 
         if index == "CAC40":
+            keys = cac40_info["stocks"].keys()
             for i in range(len(cac40_info)):  # Looking for a stock this way
-                display_stock_info(cac40_info[i])
+                display_stock_info(cac40_info["stocks"][keys[i]])
 
         elif index == "DAX30":
             for i in range(len(dax30_info)):
@@ -128,15 +116,20 @@ while start:
 
     elif option == "2":
         print("Refreshing...")
-        time = datetime.now()
+        time_of_request = datetime.now()
         get_stock_listing()
         print("Done\n")
+        start = False
 
     elif option == "3":
         index = input("Insert an index > ").upper()
         stock = input("Insert a stock > ").upper()
 
-        display_stock_info(lookup_stock(stock, index))
+        try:
+            display_stock_info(cac40_info["stocks"][stock], stock)
+
+        except KeyError:
+            print("The stock %s does not exist in %s" % (stock, index))
 
         print("\n")
 
