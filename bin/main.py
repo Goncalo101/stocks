@@ -10,6 +10,11 @@ from third_party import highlight
 import requests
 
 cac40_info = {'stocks': {}}
+cac40_table = {"AC": "ACCOR", "AI": "AIR LIQUIDE" ,"AIR": "AIRBUS", "AMT": " ARCELORMITTAL", "ATO": "ATOS", "CS": "AXA",
+               "BNP": "BNP PARIBAS BR-A", "EN": "BOUYGUES", "CAP": "CAPGEMINI",  "CA": "CARREFOUR",
+               "ACA": "CREDIT AGRICOLE SA", "ENGI": "ENGIE", "BN": "DANONE", "STM": "STMICROELECTR", "ORA": "ORANGE",
+               "EI": "ESSILOR INTL", "KER": "KERING (Ex: PPR)", "OR": "L'OREAL", "LHN": "LAFARGEHOLCIM N",
+               "LR": "LEGRAND", "MC":  " LVMH MOET VUITTON", "ML": "MICHELIN N"}
 dax30_info = {'stocks': {}}
 time_of_request = datetime.now()
 start = True
