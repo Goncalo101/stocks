@@ -12,9 +12,14 @@ import requests
 cac40_info = {'stocks': {}}
 cac40_table = {"AC": "ACCOR", "AI": "AIR LIQUIDE" ,"AIR": "AIRBUS", "AMT": " ARCELORMITTAL", "ATO": "ATOS", "CS": "AXA",
                "BNP": "BNP PARIBAS BR-A", "EN": "BOUYGUES", "CAP": "CAPGEMINI",  "CA": "CARREFOUR",
-               "ACA": "CREDIT AGRICOLE SA", "ENGI": "ENGIE", "BN": "DANONE", "STM": "STMICROELECTR", "ORA": "ORANGE",
-               "EI": "ESSILOR INTL", "KER": "KERING (Ex: PPR)", "OR": "L'OREAL", "LHN": "LAFARGEHOLCIM N",
-               "LR": "LEGRAND", "MC":  " LVMH MOET VUITTON", "ML": "MICHELIN N"}
+               "ACA": "CREDIT AGRICOLE SA", "ENGI": "ENGIE", "BN": "DANONE","EI": "ESSILOR INTL", "KER": "KERING (Ex: PPR)",
+               "OR": "L'OREAL", "LHN": "LAFARGEHOLCIM N", "LR": "LEGRAND", "MC":  "LVMH MOET VUITTON",
+               "ML": "MICHELIN N", "ORA": "ORANGE (ex: FRANCE TELECOM)", "PRI": "PERNOD RICARD", "UG": "PEUGEOT",
+               "PUB": "PUBLICIS GRP", "RNO": "RENAULT", "SAF": "SAFRAN", "SGO": "SAINT-GOBAIN", "SAN": "SANOFI",
+               "SU": "SCHNEIDER E.SE", "GLE": "SOCIETE GENERALE", "SW": "SODEXO", "OLB": "SOLVAY", "STM": "STMICROELECTR",
+               "FTI": "TECHNIP", "FP": "TOTAL", "UL": "UNIBAIL-RODAMCO", "FR": "VALEO", "VIE": "VEOLIA ENVIRONMENT",
+               "DG": "VINCI", "VIV": "VIVENDI"}
+
 dax30_info = {'stocks': {}}
 time_of_request = datetime.now()
 start = True
@@ -101,7 +106,10 @@ while start:
     option = input("> ")
 
     if option == "0":
-        display_stock_info(cac40_info["stocks"]["VIVENDI"], "VIVENDI")
+        stock = input("Insert a stock > ").upper()
+        stock = cac40_table[stock]
+
+        display_stock_info(cac40_info["stocks"][stock], stock)
 
         start = False
 
@@ -133,6 +141,8 @@ while start:
         if index == "CAC40":
 
             try:
+                stock = cac40_table[stock]
+
                 display_stock_info(cac40_info["stocks"][stock], stock)
 
             except KeyError:
