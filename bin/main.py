@@ -5,10 +5,10 @@
 # This is a web scraper, no api is being used, so it is quite limited.
 
 # from bin.wallet import Wallet
-from datetime import datetime
+from datetime import datetime, date
 from functools import reduce
 from lxml import html
-from third_party import highlight
+from third_party.highlight import highlight
 import operator
 import requests
 
@@ -34,33 +34,37 @@ version = "0.01"
 # corresponding index with new values
 def get_stock_listing():
     stocks = []
+    latest_price = []
     variation = []
     opening_price = []
     highest_price = []
     lowest_price = []
 
-    info = [stocks, variation, opening_price, highest_price, highest_price, lowest_price]
+    info = [stocks, latest_price, variation, opening_price, highest_price, lowest_price]
 
     for i in range(1, 3):
         page = requests.get("https://www.boursorama.com/bourse/actions/cotations/page-" + str(i) + "?quotation_az_filter[market]=1rPCAC")
         tree = html.fromstring(page.content)
 
         stocks.append(tree.xpath('//li[@class="o-list-inline__item o-list-inline__item--middle"]/a/text()'))
+        latest_price.append(tree.xpath('//tr[@class="c-table__row"]/td[@class="c-table__cell c-table__cell--dotted u-text-right u-text-medium "]/span[@class="c-instrument c-instrument--last"]/text()'))
         variation.append(tree.xpath('//span[@class="c-instrument c-instrument--instant-variation"]/text()'))
         opening_price.append(tree.xpath('//span[@class="c-instrument c-instrument--open"]/text()'))
         highest_price.append(tree.xpath('//span[@class="c-instrument c-instrument--high"]/text()'))
         lowest_price.append(tree.xpath('//span[@class="c-instrument c-instrument--low"]/text()'))
 
-    for i in range(len(info)):
-        info[i] = reduce(operator.concat, info[i])
+    for j in range(len(info)):
+        info[j] = reduce(operator.concat, info[j])
 
     print(info[0], info[1], info[2], info[3], info[4], info[5], sep='\n')
 
-    # for i in range(40):
-    #      cac40_info["stocks"][stocks[i]] = {"LatestPrice": latest_price[i]} #, "Variation": variation[i],
-    # #                                        "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
-    # #                                        "LowestPrice": lowest_price[i]}
-    #
+    for k in range(40):
+        cac40_info["stocks"][info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
+                                            "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
+                                            "LowestPrice": info[5][k]}
+
+    print(cac40_info)
+
     # page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
     # tree = html.fromstring(page.content)
     #
@@ -82,20 +86,18 @@ def get_stock_listing():
     #                                        "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
     #                                        "LowestPrice": lowest_price[i]}
 
+
 def display_stock_info(stock_list, stock):
     print("\n")
 
     print("Information for stock: %s" % stock)
     print("Latest Price: %s" % stock_list["LatestPrice"])
-    print("Variation: %s" % highlight.highlight(stock_list["Variation"]))
+    print("Variation: %s" % highlight(stock_list["Variation"]))
     print("Opening Price: %s" % stock_list["OpeningPrice"])
     print("Highest Price in Session: %s" % stock_list["HighestPrice"])
     print("Lowest Price in Session: %s" % stock_list["LowestPrice"])
 
     print("\n")
-
-    print("Data retrieved on: %s" % time_of_request)
-    print("Data might be delayed by up to 15 minutes.")
 
 
 # Program main loop
@@ -129,10 +131,16 @@ while start:
             for i in range(len(cac40_info["stocks"])):  # Looking for a stock this way
                 display_stock_info(cac40_info["stocks"][keys[i]], keys[i])
 
+            print("Data retrieved on: %s" % time_of_request)
+            print("Data might be delayed by up to 15 minutes.")
+
         elif index == "DAX30":
             keys = list(dax30_info["stocks"].keys())
             for i in range(len(dax30_info["stocks"])):
                 display_stock_info(dax30_info["stocks"][keys[i]], keys[i])
+
+            print("Data retrieved on: %s" % time_of_request)
+            print("Data might be delayed by up to 15 minutes.")
 
         print("\n")
 
