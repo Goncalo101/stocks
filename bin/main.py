@@ -4,13 +4,16 @@
 # Future builds should include a graphical interface and a virtual wallet for management purposes.
 # This is a web scraper, no api is being used, so it is quite limited.
 
+# from bin.wallet import Wallet
 from datetime import datetime
+from functools import reduce
 from lxml import html
 from third_party import highlight
+import operator
 import requests
 
 cac40_info = {'stocks': {}}
-cac40_table = {"AC": "ACCOR", "AI": "AIR LIQUIDE" ,"AIR": "AIRBUS", "AMT": " ARCELORMITTAL", "ATO": "ATOS", "CS": "AXA",
+cac40_table = {"AC": "ACCOR", "AI": "AIR LIQUIDE", "AIR": "AIRBUS", "AMT": " ARCELORMITTAL", "ATO": "ATOS", "CS": "AXA",
                "BNP": "BNP PARIBAS BR-A", "EN": "BOUYGUES", "CAP": "CAPGEMINI",  "CA": "CARREFOUR",
                "ACA": "CREDIT AGRICOLE SA", "ENGI": "ENGIE", "BN": "DANONE","EI": "ESSILOR INTL", "KER": "KERING (Ex: PPR)",
                "OR": "L'OREAL", "LHN": "LAFARGEHOLCIM N", "LR": "LEGRAND", "MC":  "LVMH MOET VUITTON",
@@ -21,6 +24,7 @@ cac40_table = {"AC": "ACCOR", "AI": "AIR LIQUIDE" ,"AIR": "AIRBUS", "AMT": " ARC
                "DG": "VINCI", "VIV": "VIVENDI"}
 
 dax30_info = {'stocks': {}}
+# dax30_table
 time_of_request = datetime.now()
 start = True
 version = "0.01"
@@ -29,50 +33,54 @@ version = "0.01"
 # get_stock_listing should connect to boursorama, read the constituents of each index and modify the list of the
 # corresponding index with new values
 def get_stock_listing():
-        page = requests.get("http://www.boursorama.com/bourse/actions/cours_az.phtml?MARCHE=1rPCAC")
+    stocks = []
+    variation = []
+    opening_price = []
+    highest_price = []
+    lowest_price = []
+
+    info = [stocks, variation, opening_price, highest_price, highest_price, lowest_price]
+
+    for i in range(1, 3):
+        page = requests.get("https://www.boursorama.com/bourse/actions/cotations/page-" + str(i) + "?quotation_az_filter[market]=1rPCAC")
         tree = html.fromstring(page.content)
 
-        stocks = tree.xpath('//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-libelle"]/a/text()')
-        latest_price = tree.xpath(
-            '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-last"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-last"]/span/text()')
-        variation = tree.xpath(
-            '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var"]/span/text()')
-        opening_price = tree.xpath(
-            '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-open"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-open"]/span/text()')
-        highest_price = tree.xpath(
-            '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-high"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-high"]/span/text()')
-        lowest_price = tree.xpath(
-            '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-low"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-low"]/span/text()')
-        variation_from1_jan = tree.xpath(
-            '//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/span/text()|//table[@class="block alt list sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
+        stocks.append(tree.xpath('//li[@class="o-list-inline__item o-list-inline__item--middle"]/a/text()'))
+        variation.append(tree.xpath('//span[@class="c-instrument c-instrument--instant-variation"]/text()'))
+        opening_price.append(tree.xpath('//span[@class="c-instrument c-instrument--open"]/text()'))
+        highest_price.append(tree.xpath('//span[@class="c-instrument c-instrument--high"]/text()'))
+        lowest_price.append(tree.xpath('//span[@class="c-instrument c-instrument--low"]/text()'))
 
-        # Each stock is going to be inside a vector inside a list
-        for i in range(40):
-            cac40_info["stocks"][stocks[i]] = {"LatestPrice": latest_price[i], "Variation": variation[i],
-                                               "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
-                                               "LowestPrice": lowest_price[i]}
+    for i in range(len(info)):
+        info[i] = reduce(operator.concat, info[i])
 
-        page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
-        tree = html.fromstring(page.content)
+    print(info[0], info[1], info[2], info[3], info[4], info[5], sep='\n')
 
-        stocks = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-libelle"]/a/text()')
-        latest_price = tree.xpath(
-            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-last"]/span/text()')
-        variation = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var"]/span/text()')
-        opening_price = tree.xpath(
-            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-open"]/span/text()')
-        highest_price = tree.xpath(
-            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-high"]/span/text()')
-        lowest_price = tree.xpath(
-            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-low"]/span/text()')
-        variation_from1_jan = tree.xpath(
-            '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
-
-        for i in range(30):
-            dax30_info["stocks"][stocks[i]] = {"LatestPrice": latest_price[i], "Variation": variation[i],
-                                               "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
-                                               "LowestPrice": lowest_price[i]}
-
+    # for i in range(40):
+    #      cac40_info["stocks"][stocks[i]] = {"LatestPrice": latest_price[i]} #, "Variation": variation[i],
+    # #                                        "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
+    # #                                        "LowestPrice": lowest_price[i]}
+    #
+    # page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
+    # tree = html.fromstring(page.content)
+    #
+    # stocks = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-libelle"]/a/text()')
+    # latest_price = tree.xpath(
+    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-last"]/span/text()')
+    # variation = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var"]/span/text()')
+    # opening_price = tree.xpath(
+    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-open"]/span/text()')
+    # highest_price = tree.xpath(
+    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-high"]/span/text()')
+    # lowest_price = tree.xpath(
+    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-low"]/span/text()')
+    # variation_from1_jan = tree.xpath(
+    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
+    #
+    # for i in range(30):
+    #     dax30_info["stocks"][stocks[i]] = {"LatestPrice": latest_price[i], "Variation": variation[i],
+    #                                        "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
+    #                                        "LowestPrice": lowest_price[i]}
 
 def display_stock_info(stock_list, stock):
     print("\n")
