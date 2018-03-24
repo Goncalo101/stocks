@@ -56,14 +56,10 @@ def get_stock_listing():
     for j in range(len(info)):
         info[j] = reduce(operator.concat, info[j])
 
-    print(info[0], info[1], info[2], info[3], info[4], info[5], sep='\n')
-
     for k in range(40):
         cac40_info["stocks"][info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
                                             "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
                                             "LowestPrice": info[5][k]}
-
-    print(cac40_info)
 
     # page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
     # tree = html.fromstring(page.content)
