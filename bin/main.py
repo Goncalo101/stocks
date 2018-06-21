@@ -8,23 +8,27 @@
 from datetime import datetime, date
 from functools import reduce
 from lxml import html
-from third_party.highlight import highlight
+# from third_party.highlight import highlight
 import operator
+import os
 import requests
 
-cac40_info = {'stocks': {}}
-cac40_table = {"AC": "ACCOR", "AI": "AIR LIQUIDE", "AIR": "AIRBUS", "AMT": " ARCELORMITTAL", "ATO": "ATOS", "CS": "AXA",
-               "BNP": "BNP PARIBAS BR-A", "EN": "BOUYGUES", "CAP": "CAPGEMINI",  "CA": "CARREFOUR",
-               "ACA": "CREDIT AGRICOLE SA", "ENGI": "ENGIE", "BN": "DANONE","EI": "ESSILOR INTL", "KER": "KERING (Ex: PPR)",
-               "OR": "L'OREAL", "LHN": "LAFARGEHOLCIM N", "LR": "LEGRAND", "MC":  "LVMH MOET VUITTON",
-               "ML": "MICHELIN N", "ORA": "ORANGE (ex: FRANCE TELECOM)", "PRI": "PERNOD RICARD", "UG": "PEUGEOT",
-               "PUB": "PUBLICIS GRP", "RNO": "RENAULT", "SAF": "SAFRAN", "SGO": "SAINT-GOBAIN", "SAN": "SANOFI",
-               "SU": "SCHNEIDER E.SE", "GLE": "SOCIETE GENERALE", "SW": "SODEXO", "OLB": "SOLVAY", "STM": "STMICROELECTR",
-               "FTI": "TECHNIP", "FP": "TOTAL", "UL": "UNIBAIL-RODAMCO", "FR": "VALEO", "VIE": "VEOLIA ENVIRONMENT",
-               "DG": "VINCI", "VIV": "VIVENDI"}
+cac40_table = {}
+dax30_table = {}
 
-dax30_info = {'stocks': {}}
-# dax30_table
+with open(os.path.join("data", "cac40.txt")) as cac40File:
+    for line in cac40File:
+        lineVec = line.split(' ', 1)
+        cac40_table[lineVec[0]] = lineVec[1].rstrip()
+
+with open(os.path.join("data", "dax30.txt")) as dax30File:
+    for line in dax30File:
+        lineVec = line.split(' ', 1)
+        dax30_table[lineVec[0]] = lineVec[1].rstrip()
+
+cac40_info = {}
+dax30_info = {}
+
 time_of_request = datetime.now()
 start = True
 version = "0.01"
@@ -43,11 +47,48 @@ def get_stock_listing():
     info = [stocks, latest_price, variation, opening_price, highest_price, lowest_price]
 
     for i in range(1, 3):
-        page = requests.get("https://www.boursorama.com/bourse/actions/cotations/page-" + str(i) + "?quotation_az_filter[market]=1rPCAC")
+        page = requests.get("https://www.boursorama.com/bourse/actions/cotations/page-" + str(
+            i) + "?quotation_az_filter[market]=1rPCAC")
         tree = html.fromstring(page.content)
 
         stocks.append(tree.xpath('//li[@class="o-list-inline__item o-list-inline__item--middle"]/a/text()'))
-        latest_price.append(tree.xpath('//tr[@class="c-table__row"]/td[@class="c-table__cell c-table__cell--dotted u-text-right u-text-medium "]/span[@class="c-instrument c-instrument--last"]/text()'))
+        latest_price.append(tree.xpath(
+            '//tr[@class="c-table__row"]/td[@class="c-table__cell c-table__cell--dotted u-text-right u-text-medium "]/span[@class="c-instrument c-instrument--last"]/text()'))
+        variation.append(tree.xpath('//span[@class="c-instrument c-instrument--instant-variation"]/text()'))
+        opening_price.append(tree.xpath('//span[@class="c-instrument c-instrument--open"]/text()'))
+        highest_price.append(tree.xpath('//span[@class="c-instrument c-instrument--high"]/text()'))
+        lowest_price.append(tree.xpath('//span[@class="c-instrument c-instrument--low"]/text()'))
+
+    # Boursorama now displays the list of stocks in 2 pages which causes the loop above to generate a list with
+    # two sublists, one for each page. It is much better to work with a single list, which is the purpose of
+    # the following loop.
+    for j in range(len(info)):
+        info[j] = reduce(operator.concat, info[j])
+
+    for k in range(40):
+        cac40_info[info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
+                                  "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
+                                  "LowestPrice": info[5][k]}
+
+    # A lack of predictability in URLs brings the need to add another loop.
+    # Resetting lists
+    stocks = []
+    latest_price = []
+    variation = []
+    opening_price = []
+    highest_price = []
+    lowest_price = []
+
+    info = [stocks, latest_price, variation, opening_price, highest_price, lowest_price]
+
+    for i in range(1, 3):
+        page = requests.get("https://www.boursorama.com/bourse/actions/cotations/international/page-" + str(
+            i) + "?international_quotation_az_filter%5Bcountry%5D=49&international_quotation_az_filter%5Bmarket%5D=5pDAX&international_quotation_az_filter%5Bletter%5D=&international_quotation_az_filter%5Bfilter%5D=")
+        tree = html.fromstring(page.content)
+
+        stocks.append(tree.xpath('//li[@class="o-list-inline__item o-list-inline__item--middle"]/a/text()'))
+        latest_price.append(tree.xpath(
+            '//tr[@class="c-table__row"]/td[@class="c-table__cell c-table__cell--dotted u-text-right u-text-medium "]/span[@class="c-instrument c-instrument--last"]/text()'))
         variation.append(tree.xpath('//span[@class="c-instrument c-instrument--instant-variation"]/text()'))
         opening_price.append(tree.xpath('//span[@class="c-instrument c-instrument--open"]/text()'))
         highest_price.append(tree.xpath('//span[@class="c-instrument c-instrument--high"]/text()'))
@@ -56,44 +97,15 @@ def get_stock_listing():
     for j in range(len(info)):
         info[j] = reduce(operator.concat, info[j])
 
-    for k in range(40):
-        cac40_info["stocks"][info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
-                                            "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
-                                            "LowestPrice": info[5][k]}
-
-    # page = requests.get("http://www.boursorama.com/bourse/actions/inter_az.phtml?PAYS=49&BI=5pDAX")
-    # tree = html.fromstring(page.content)
-    #
-    # stocks = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-libelle"]/a/text()')
-    # latest_price = tree.xpath(
-    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-last"]/span/text()')
-    # variation = tree.xpath('//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var"]/span/text()')
-    # opening_price = tree.xpath(
-    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-open"]/span/text()')
-    # highest_price = tree.xpath(
-    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-high"]/span/text()')
-    # lowest_price = tree.xpath(
-    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-low"]/span/text()')
-    # variation_from1_jan = tree.xpath(
-    #     '//table[@class="list hover alt sortserver"]/tbody/tr/td[@class="tdv-var_an"]/span/text()')
-    #
-    # for i in range(30):
-    #     dax30_info["stocks"][stocks[i]] = {"LatestPrice": latest_price[i], "Variation": variation[i],
-    #                                        "OpeningPrice": opening_price[i], "HighestPrice": highest_price[i],
-    #                                        "LowestPrice": lowest_price[i]}
+    for k in range(29):
+        dax30_info[info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
+                                  "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
+                                  "LowestPrice": info[5][k]}
 
 
 def display_stock_info(stock_list, stock):
-    print("\n")
-
-    print("Information for stock: %s" % stock)
-    print("Latest Price: %s" % stock_list["LatestPrice"])
-    print("Variation: %s" % highlight(stock_list["Variation"]))
-    print("Opening Price: %s" % stock_list["OpeningPrice"])
-    print("Highest Price in Session: %s" % stock_list["HighestPrice"])
-    print("Lowest Price in Session: %s" % stock_list["LowestPrice"])
-
-    print("\n")
+    print('{0: <28} {1: <8} {2} {3: >8}'.format(stock, stock_list["LatestPrice"], stock_list["Variation"],
+                                                stock_list["OpeningPrice"]))
 
 
 # Program main loop
@@ -115,7 +127,7 @@ while start:
         stock = input("Insert a stock > ").upper()
         stock = cac40_table[stock]
 
-        display_stock_info(cac40_info["stocks"][stock], stock)
+        display_stock_info(cac40_info[stock], stock)
 
         start = False
 
@@ -123,17 +135,17 @@ while start:
         index = input("Insert an index > ").upper()
 
         if index == "CAC40":
-            keys = list(cac40_info["stocks"].keys())
-            for i in range(len(cac40_info["stocks"])):  # Looking for a stock this way
-                display_stock_info(cac40_info["stocks"][keys[i]], keys[i])
+            keys = list(cac40_info.keys())
+            for i in range(len(cac40_info)):  # Looking for a stock this way
+                display_stock_info(cac40_info[keys[i]], keys[i])
 
             print("Data retrieved on: %s" % time_of_request)
             print("Data might be delayed by up to 15 minutes.")
 
         elif index == "DAX30":
-            keys = list(dax30_info["stocks"].keys())
-            for i in range(len(dax30_info["stocks"])):
-                display_stock_info(dax30_info["stocks"][keys[i]], keys[i])
+            keys = list(dax30_info.keys())
+            for i in range(len(dax30_info)):
+                display_stock_info(dax30_info[keys[i]], keys[i])
 
             print("Data retrieved on: %s" % time_of_request)
             print("Data might be delayed by up to 15 minutes.")
@@ -155,14 +167,14 @@ while start:
             try:
                 stock = cac40_table[stock]
 
-                display_stock_info(cac40_info["stocks"][stock], stock)
+                display_stock_info(cac40_info[stock], stock)
 
             except KeyError:
                 print("The stock %s does not exist in %s" % (stock, index))
 
         elif index == "DAX30":
             try:
-                display_stock_info(dax30_info["stocks"][stock], stock)
+                display_stock_info(dax30_info[stock], stock)
 
             except KeyError:
                 print("The stock %s does not exist in %s" % (stock, index))
