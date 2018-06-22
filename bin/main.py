@@ -5,14 +5,14 @@
 # This is a web scraper, no api is being used, so it is quite limited.
 
 from bin.crawler import Crawler
-# from bin.wallet import Wallet
+from bin.wallet import Wallet
 from third_party.highlight import highlight
 import atexit
 import os
+import time
 
 cac40_table = {}
 dax30_table = {}
-
 
 # Load conversion table from file
 with open(os.path.join("data", "cac40.txt")) as cac40File:
@@ -34,83 +34,88 @@ def display_stock_info(stock_list, stock):
                                                 stock_list["OpeningPrice"]))
 
 
+def get_stock_info(stock_list, stock):  # Returns a dictionary containing stock information
+    return stock_list[stock]
+
+
 # Program main loop
-print("StockParser version %s" % version, sep="\n")
+print("stocks version %s" % version, sep="\n")
 crawler = Crawler()
+wallet = Wallet()
 
-if crawler.running:
-    print("Loading data, please wait")
+print("Loading data, please wait...")
 
-if not crawler.running:
 
-    while start:
-        print("Select an option:")
-        print("0: Debug")
-        print("1: Display Index Info (Might generate big lists of data).")
-        print("2: Show Info of a Given Stock.")
-        print("3: Exit")
+while crawler.running:
+    time.sleep(5)
 
-        option = input("> ")
+while start:
+    print("\nSelect an option:")
+    print("0: Debug")
+    print("1: Display Index Info (Might generate big lists of data).")
+    print("2: Show Info of a Given Stock.")
+    print("3: Exit")
 
-        if option == "0":
-            stock = input("Insert a stock > ").upper()
-            stock = cac40_table[stock]
+    option = input("> ")
 
-            display_stock_info(crawler.cac40_info[stock], stock)
+    if option == "0":
 
-            start = False
+        wallet.load_wallet()
+        print(wallet.wallet)
 
-        if option == "1":
-            index = input("Insert an index > ").upper()
+    if option == "1":
+        index = input("Insert an index > ").upper()
 
-            if index == "CAC40":
+        print('{0: <28} {1: >8} {2} {3: >8}'.format("Constituent", "Latest", "Variation", "Opening"))  # Table header
 
-                keys = sorted(list(crawler.cac40_info.keys()))
-                for i in range(len(crawler.cac40_info)):
-                    display_stock_info(crawler.cac40_info[keys[i]], keys[i])
+        if index == "CAC40":
 
-                print("Data retrieved on: %s" % crawler.time_of_request)
-                print("Data might be delayed by up to 15 minutes.")
+            keys = sorted(list(crawler.cac40_info.keys()))
+            for i in range(len(crawler.cac40_info)):
+                display_stock_info(crawler.cac40_info[keys[i]], keys[i])
 
-            elif index == "DAX30":
+            print("Data retrieved on: %s" % crawler.time_of_request)
+            print("Data might be delayed by up to 15 minutes.")
 
-                keys = sorted(list(crawler.dax30_info.keys()))
-                for i in range(len(crawler.dax30_info)):
-                    display_stock_info(crawler.dax30_info[keys[i]], keys[i])
+        elif index == "DAX30":
 
-                print("Data retrieved on: %s" % crawler.time_of_request)
-                print("Data might be delayed by up to 15 minutes.")
+            keys = sorted(list(crawler.dax30_info.keys()))
+            for i in range(len(crawler.dax30_info)):
+                display_stock_info(crawler.dax30_info[keys[i]], keys[i])
 
-            print("\n")
+            print("Data retrieved on: %s" % crawler.time_of_request)
+            print("Data might be delayed by up to 15 minutes.")
 
-        elif option == "2":
-            index = input("Insert an index > ").upper()
-            stock = input("Insert a stock > ").upper()
+        print("\n")
 
-            if index == "CAC40":
+    elif option == "2":
+        index = input("Insert an index > ").upper()
+        stock = input("Insert a stock > ").upper()
 
-                try:
-                    stock = cac40_table[stock]
+        if index == "CAC40":
 
-                    display_stock_info(crawler.cac40_info[stock], stock)
+            try:
+                stock = cac40_table[stock]
 
-                except KeyError:
-                    print("The stock %s does not exist in %s" % (stock, index))
+                display_stock_info(crawler.cac40_info[stock], stock)
 
-            elif index == "DAX30":
-                try:
-                    stock = dax30_table[stock]
+            except KeyError:
+                print("The stock %s does not exist in %s" % (stock, index))
 
-                    display_stock_info(crawler.dax30_info[stock], stock)
+        elif index == "DAX30":
+            try:
+                stock = dax30_table[stock]
 
-                except KeyError:
-                    print("The stock %s does not exist in %s" % (stock, index))
+                display_stock_info(crawler.dax30_info[stock], stock)
 
-            print("\n")
+            except KeyError:
+                print("The stock %s does not exist in %s" % (stock, index))
 
-        elif option == "3":
-            # Exit loop
-            start = False
+        print("\n")
 
-    atexit.register(lambda: crawler.scheduler.shutdown())
-    exit(0)
+    elif option == "3":
+        # Exit loop
+        start = False
+
+atexit.register(lambda: crawler.scheduler.shutdown())  # Properly terminate scheduler
+exit(0)

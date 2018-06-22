@@ -19,14 +19,12 @@ class Crawler:
                                trigger=IntervalTrigger(seconds=10),
                                id='Connection job',
                                name='Refresh information')
-
-        self.running = False
+        self.running = True
 
     # get_stock_listing should connect to boursorama, read the constituents of each index and modify the list of the
     # corresponding index with new values
     def get_stock_listing(self):
         self.time_of_request = datetime.now()
-        self.running = True
 
         stocks = []
         latest_price = []
