@@ -47,9 +47,8 @@ if not crawler.running:
         print("Select an option:")
         print("0: Debug")
         print("1: Display Index Info (Might generate big lists of data).")
-        print("2: Refresh Stock Lists.")
-        print("3: Show Info of a Given Stock.")
-        print("4: Exit")
+        print("2: Show Info of a Given Stock.")
+        print("3: Exit")
 
         option = input("> ")
 
@@ -67,7 +66,7 @@ if not crawler.running:
             if index == "CAC40":
 
                 keys = sorted(list(crawler.cac40_info.keys()))
-                for i in range(len(crawler.cac40_info)):  # Looking for a stock this way
+                for i in range(len(crawler.cac40_info)):
                     display_stock_info(crawler.cac40_info[keys[i]], keys[i])
 
                 print("Data retrieved on: %s" % crawler.time_of_request)
@@ -84,13 +83,7 @@ if not crawler.running:
 
             print("\n")
 
-        # elif option == "2":
-        #     print("Refreshing...")
-        #     time_of_request = datetime.now()
-        #     crawler.get_stock_listing()
-        #     print("Done\n")
-
-        elif option == "3":
+        elif option == "2":
             index = input("Insert an index > ").upper()
             stock = input("Insert a stock > ").upper()
 
@@ -115,7 +108,7 @@ if not crawler.running:
 
             print("\n")
 
-        elif option == "4":
+        elif option == "3":
             # Exit loop
             start = False
 
