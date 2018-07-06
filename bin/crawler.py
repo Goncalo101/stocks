@@ -9,17 +9,20 @@ import requests
 
 class Crawler:
     def __init__(self):
-        self.cac40_info = {}
-        self.dax30_info = {}
+        self.running = True
+
+        self.info = {"CAC40": {}, "DAX30": {}}
+        # self.cac40_info = {}
+        # self.dax30_info = {}
+
         self.time_of_request = datetime.now()
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.start()
         self.scheduler.add_job(func=self.get_stock_listing,
-                               trigger=IntervalTrigger(seconds=10),
+                               trigger=IntervalTrigger(seconds=30),
                                id='Connection job',
                                name='Refresh information')
-        self.running = True
 
     # get_stock_listing should connect to boursorama, read the constituents of each index and modify the list of the
     # corresponding index with new values
@@ -55,9 +58,9 @@ class Crawler:
             info[j] = reduce(operator.concat, info[j])
 
         for k in range(40):
-            self.cac40_info[info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
-                                           "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
-                                           "LowestPrice": info[5][k]}
+            self.info["CAC40"][info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
+                                              "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
+                                              "LowestPrice": info[5][k]}
 
         # A lack of predictability in URLs brings the need to add another loop.
         # Resetting lists
@@ -87,9 +90,9 @@ class Crawler:
             info[j] = reduce(operator.concat, info[j])
 
         for k in range(29):
-            self.dax30_info[info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
-                                           "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
-                                           "LowestPrice": info[5][k]}
+            self.info["DAX30"][info[0][k]] = {"LatestPrice": float(info[1][k]), "Variation": info[2][k],
+                                              "OpeningPrice": float(info[3][k]), "HighestPrice": float(info[4][k]),
+                                              "LowestPrice": float(info[5][k])}
 
         self.running = False
 

@@ -4,26 +4,8 @@
 # Future builds should include a graphical interface and a virtual wallet for management purposes.
 # This is a web scraper, no api is being used, so it is quite limited.
 
-from bin.crawler import Crawler
 from bin.wallet import Wallet
 from third_party.highlight import highlight
-import atexit
-import os
-import time
-
-cac40_table = {}
-dax30_table = {}
-
-# Load conversion table from file
-with open(os.path.join("data", "cac40.txt")) as cac40File:
-    for line in cac40File:
-        lineVec = line.split(' ', 1)
-        cac40_table[lineVec[0]] = lineVec[1].rstrip()
-
-with open(os.path.join("data", "dax30.txt")) as dax30File:
-    for line in dax30File:
-        lineVec = line.split(' ', 1)
-        dax30_table[lineVec[0]] = lineVec[1].rstrip()
 
 start = True
 version = "0.02"
@@ -38,84 +20,77 @@ def get_stock_info(stock_list, stock):  # Returns a dictionary containing stock 
     return stock_list[stock]
 
 
+def show_index_info(index):
+    info = wallet.get_info()[index]
+    stocks_in_index = sorted(list(info.keys()))
+
+    print('{0: <28} {1: >8} {2} {3: >8}'.format("Constituent", "Latest", "Variation", "Opening"))  # Table header
+
+    i = 0
+    while i < len(info):
+        stock = stocks_in_index[i]
+        display_stock_info(info[stock], stock)
+        i += 1
+
+    print("Data retrieved on: %s" % wallet.get_time())
+    print("Data might be delayed by up to 15 minutes.\n")
+
+
 # Program main loop
 print("stocks version %s" % version, sep="\n")
-crawler = Crawler()
+
 wallet = Wallet()
 
-print("Loading data, please wait...")
 
+def handle_option2():
+    index = input("Insert an index > ").upper()
+    stock = input("Insert a stock > ").upper()
 
-while crawler.running:
-    time.sleep(5)
+    try:
+        stock = wallet.translate(stock, index)
+
+        wallet.check_crawler()
+
+        # Table header
+        print('{0: <28} {1: >8} {2} {3: >8}'.format("Constituent", "Latest", "Variation", "Opening"))
+        display_stock_info(wallet.get_info()[index][stock], stock)
+
+    except KeyError:
+        print("The stock %s does not exist in %s\n" % (stock, index))
+
+    else:
+        print("\nData retrieved on: %s" % wallet.get_time())
+        print("Data might be delayed by up to 15 minutes.\n")
+
 
 while start:
     print("\nSelect an option:")
     print("0: Debug")
     print("1: Display Index Info (Might generate big lists of data).")
     print("2: Show Info of a Given Stock.")
-    print("3: Exit")
+    print("3: Load wallet.")
+    print("4: Exit")
 
     option = input("> ")
-
-    if option == "0":
-
-        wallet.load_wallet()
-        print(wallet.wallet)
 
     if option == "1":
         index = input("Insert an index > ").upper()
 
-        print('{0: <28} {1: >8} {2} {3: >8}'.format("Constituent", "Latest", "Variation", "Opening"))  # Table header
-
-        if index == "CAC40":
-
-            keys = sorted(list(crawler.cac40_info.keys()))
-            for i in range(len(crawler.cac40_info)):
-                display_stock_info(crawler.cac40_info[keys[i]], keys[i])
-
-            print("Data retrieved on: %s" % crawler.time_of_request)
-            print("Data might be delayed by up to 15 minutes.")
-
-        elif index == "DAX30":
-
-            keys = sorted(list(crawler.dax30_info.keys()))
-            for i in range(len(crawler.dax30_info)):
-                display_stock_info(crawler.dax30_info[keys[i]], keys[i])
-
-            print("Data retrieved on: %s" % crawler.time_of_request)
-            print("Data might be delayed by up to 15 minutes.")
-
-        print("\n")
+        show_index_info(index)
 
     elif option == "2":
-        index = input("Insert an index > ").upper()
-        stock = input("Insert a stock > ").upper()
-
-        if index == "CAC40":
-
-            try:
-                stock = cac40_table[stock]
-
-                display_stock_info(crawler.cac40_info[stock], stock)
-
-            except KeyError:
-                print("The stock %s does not exist in %s" % (stock, index))
-
-        elif index == "DAX30":
-            try:
-                stock = dax30_table[stock]
-
-                display_stock_info(crawler.dax30_info[stock], stock)
-
-            except KeyError:
-                print("The stock %s does not exist in %s" % (stock, index))
-
-        print("\n")
+        handle_option2()
 
     elif option == "3":
+        wallet_file = input("Insert wallet file name > ")
+
+        wallet.load_wallet(wallet_file)
+
+        print("Market value: %s\n" % wallet.get_market_value())
+
+    elif option == "4":
         # Exit loop
         start = False
 
-atexit.register(lambda: crawler.scheduler.shutdown())  # Properly terminate scheduler
+wallet.terminate()  # Properly terminate scheduler
 exit(0)
