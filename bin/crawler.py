@@ -12,8 +12,6 @@ class Crawler:
         self.running = True
 
         self.info = {"CAC40": {}, "DAX30": {}}
-        # self.cac40_info = {}
-        # self.dax30_info = {}
 
         self.time_of_request = datetime.now()
 
@@ -58,9 +56,9 @@ class Crawler:
             info[j] = reduce(operator.concat, info[j])
 
         for k in range(40):
-            self.info["CAC40"][info[0][k]] = {"LatestPrice": info[1][k], "Variation": info[2][k],
-                                              "OpeningPrice": info[3][k], "HighestPrice": info[4][k],
-                                              "LowestPrice": info[5][k]}
+            self.info["CAC40"][info[0][k]] = {"LatestPrice": float(info[1][k]), "Variation": info[2][k],
+                                              "OpeningPrice": float(info[3][k]), "HighestPrice": float(info[4][k]),
+                                              "LowestPrice": float(info[5][k])}
 
         # A lack of predictability in URLs brings the need to add another loop.
         # Resetting lists

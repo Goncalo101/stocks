@@ -73,7 +73,12 @@ while start:
 
     option = input("> ")
 
-    if option == "1":
+    if option == "0":
+        wallet.load_wallet("wallet.log")
+
+        print(wallet.get_market_value(), sep="\n")
+
+    elif option == "1":
         index = input("Insert an index > ").upper()
 
         show_index_info(index)

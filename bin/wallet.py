@@ -9,8 +9,8 @@ class Wallet(Crawler):
     def __init__(self):
         super().__init__()
 
-        self.funds = 0
-        self.market_value = 0
+        self.funds = 0.0
+        self.market_value = 0.0
         self.transaction_history = []
         self.wallet = {}
 
@@ -31,7 +31,7 @@ class Wallet(Crawler):
         print("Loading data, please wait...")
 
         while self.running:
-            time.sleep(5)
+            time.sleep(10)
 
     def terminate(self):
         atexit.register(lambda: self.scheduler.shutdown())
@@ -55,7 +55,7 @@ class Wallet(Crawler):
         self.check_crawler()
 
         transaction_value = quantity * price
-        transaction_time = datetime.now()
+        transaction_time = str(datetime.now())
 
         self.transaction_history.append([transaction_type, stock, abs(quantity), price, abs(transaction_value), transaction_time])
 
@@ -67,8 +67,7 @@ class Wallet(Crawler):
         except KeyError:
             self.wallet[stock] = {"Quantity": quantity, "Price": price, "Cost": transaction_value, "Index": index}
 
-        else:
-            self.update_market_value(index, stock)
+        self.update_market_value(index, stock)
 
         with open("wallet.out", "a") as wallet_log:
             wallet_log.write('{0} {1} {2} {3}\n'.format(stock, quantity, price, transaction_value))
@@ -94,4 +93,4 @@ class Wallet(Crawler):
         return self.conversion_table[index][stock]
 
     def get_market_value(self):
-        return self.market_value
+        return '{0:,.2f}'.format(self.market_value)
